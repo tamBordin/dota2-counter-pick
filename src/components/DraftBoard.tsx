@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
 import { HeroStats, getHeroImageUrl } from "@/lib/dotaApi";
 import { X } from "lucide-react";
+import React from "react";
 
 interface DraftBoardProps {
   radiantTeam: (HeroStats | null)[];
