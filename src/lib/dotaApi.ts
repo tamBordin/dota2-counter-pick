@@ -33,7 +33,6 @@ export interface Matchup {
 }
 
 export const fetchHeroes = async (): Promise<HeroStats[]> => {
-  // Return local data from JSON cache
   return heroesData as HeroStats[];
 };
 
@@ -53,7 +52,7 @@ export const fetchCurrentPatch = async (): Promise<string> => {
     return response.data.version;
   } catch (error) {
     console.error('Error fetching patch info from internal API:', error);
-    return '7.40c'; // Your verified current version
+    return '7.40c';
   }
 };
 

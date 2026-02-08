@@ -24,8 +24,43 @@ export default function CounterPickPage() {
           fetchHeroes(),
           import('@/lib/dotaApi').then(m => m.fetchCurrentPatch())
         ]);
-        setAllHeroes(heroes.sort((a, b) => a.localized_name.localeCompare(b.localized_name)));
+        
+        const sortedHeroes = heroes.sort((a, b) => a.localized_name.localeCompare(b.localized_name));
+        setAllHeroes(sortedHeroes);
         setCurrentPatch(patch);
+
+        const params = new URLSearchParams(window.location.search);
+        const rIds = params.get('r')?.split(',').map(Number) || [];
+        const dIds = params.get('d')?.split(',').map(Number) || [];
+
+        const newRadiant = Array(5).fill(null);
+        const newDire = Array(5).fill(null);
+
+        rIds.forEach((id, i) => {
+          if (i < 5) {
+            const h = sortedHeroes.find(hero => hero.id === id);
+            if (h) newRadiant[i] = h;
+          }
+        });
+
+        dIds.forEach((id, i) => {
+          if (i < 5) {
+            const h = sortedHeroes.find(hero => hero.id === id);
+            if (h) newDire[i] = h;
+          }
+        });
+
+        setRadiantTeam(newRadiant);
+        setDireTeam(newDire);
+
+        const uniqueIds = Array.from(new Set([...rIds, ...dIds]));
+        for (const id of uniqueIds) {
+          if (id) {
+            const matchups = await fetchHeroMatchups(id);
+            setMatchupsCache(prev => ({ ...prev, [id]: matchups }));
+          }
+        }
+
       } catch (error) {
         console.error("Initialization failed", error);
       } finally {
@@ -34,6 +69,18 @@ export default function CounterPickPage() {
     };
     init();
   }, []);
+
+  useEffect(() => {
+    if (loading) return;
+    const rIds = radiantTeam.filter(h => h !== null).map(h => h?.id).join(',');
+    const dIds = direTeam.filter(h => h !== null).map(h => h?.id).join(',');
+    
+    const url = new URL(window.location.href);
+    if (rIds) url.searchParams.set('r', rIds); else url.searchParams.delete('r');
+    if (dIds) url.searchParams.set('d', dIds); else url.searchParams.delete('d');
+    
+    window.history.replaceState({}, '', url.toString());
+  }, [radiantTeam, direTeam, loading]);
 
   const selectedHeroIds = useMemo(() => {
     return [
@@ -125,7 +172,6 @@ export default function CounterPickPage() {
   return (
     <main className="min-h-screen bg-[#0a0d14] bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-blue-900/10 via-slate-950 to-[#0a0d14] text-slate-200 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
-        {/* Header Section */}
         <header className="flex flex-col lg:flex-row justify-between items-center mb-8 border-b border-slate-800/50 pb-6 gap-6">
           <div className="flex flex-col items-center lg:items-start text-center lg:text-left">
             <h1 className="text-4xl font-black italic tracking-tighter text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
@@ -178,7 +224,6 @@ export default function CounterPickPage() {
             <button 
               onClick={clearDraft}
               className="p-2 bg-slate-900 text-slate-400 hover:text-red-500 border border-slate-800 rounded transition-colors"
-              title="Reset Draft"
             >
               <Trash2 size={18} />
             </button>
@@ -255,7 +300,6 @@ export default function CounterPickPage() {
           </div>
         </div>
 
-        {/* Footer with Policy & Disclaimer */}
         <footer className="mt-16 pt-8 border-t border-slate-800 pb-8 text-center space-y-4">
           <div className="flex justify-center gap-6 text-[10px] font-bold uppercase tracking-widest text-slate-500">
             <span>Data from OpenDota API</span>

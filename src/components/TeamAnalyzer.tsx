@@ -48,7 +48,6 @@ const TeamAnalyzer: React.FC<TeamAnalyzerProps> = ({ team, label, color }) => {
     },
   ];
 
-  // Damage Type calculation
   const magicHeroes = selectedHeroes.filter((h) =>
     h.roles.includes("Nuker"),
   ).length;

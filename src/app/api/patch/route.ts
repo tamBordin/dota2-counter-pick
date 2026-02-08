@@ -8,12 +8,10 @@ type PatchInfo = {
 
 export async function GET() {
   try {
-    // Official Valve Datafeed for patch notes
     const { data } = await axios.get<PatchInfo>('https://www.dota2.com/datafeed/patchnoteslist?language=english');
 
     if (data && data.success && data.patches) {
-      // The first item in the list is the most recent patch
-      const latestPatch = data.patches[data.patches.length - 1];
+      const latestPatch = data.patches[0];
       return NextResponse.json({
         version: latestPatch.patch_name,
         timestamp: latestPatch.patch_timestamp
@@ -23,6 +21,6 @@ export async function GET() {
     throw new Error('Invalid response from Valve');
   } catch (error) {
     console.error('Failed to fetch patch from Valve:', error);
-    return NextResponse.json({ version: '7.40c' }, { status: 500 }); // Fallback to what you mentioned
+    return NextResponse.json({ version: '7.40c' }, { status: 500 });
   }
 }

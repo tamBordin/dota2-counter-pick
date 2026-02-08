@@ -17,7 +17,6 @@ const DraftBoard: React.FC<DraftBoardProps> = ({
 }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12 mb-8">
-      {/* Radiant Team */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-xs font-black text-green-500 uppercase tracking-[0.3em]">
@@ -62,7 +61,6 @@ const DraftBoard: React.FC<DraftBoardProps> = ({
         </div>
       </div>
 
-      {/* Dire Team */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div className="h-px flex-1 bg-gradient-to-l from-red-500/50 to-transparent mr-4"></div>
