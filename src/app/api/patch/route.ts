@@ -11,7 +11,7 @@ export async function GET() {
     const { data } = await axios.get<PatchInfo>('https://www.dota2.com/datafeed/patchnoteslist?language=english');
 
     if (data && data.success && data.patches) {
-      const latestPatch = data.patches[0];
+      const latestPatch = data.patches[data.patches.length - 1];
       return NextResponse.json({
         version: latestPatch.patch_name,
         timestamp: latestPatch.patch_timestamp
