@@ -3,6 +3,7 @@
 import React from "react";
 import { HeroStats, getHeroImageUrl } from "@/lib/dotaApi";
 import { X } from "lucide-react";
+import Image from "next/image";
 
 interface DraftBoardProps {
   radiantTeam: (HeroStats | null)[];
@@ -36,9 +37,10 @@ const DraftBoard: React.FC<DraftBoardProps> = ({
             >
               {hero ? (
                 <>
-                  <img
+                  <Image
                     src={getHeroImageUrl(hero.img)}
                     alt={hero.localized_name}
+                    fill
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   <button
@@ -80,9 +82,10 @@ const DraftBoard: React.FC<DraftBoardProps> = ({
             >
               {hero ? (
                 <>
-                  <img
+                  <Image
                     src={getHeroImageUrl(hero.img)}
                     alt={hero.localized_name}
+                    fill
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   <button

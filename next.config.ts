@@ -4,7 +4,14 @@ const nextConfig: NextConfig = {
   /* config options here */
   images: {
     remotePatterns: [
-      new URL("https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png"),
+      {
+        protocol: 'https',
+        hostname: 'cdn.buymeacoffee.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.cloudflare.steamstatic.com',
+      }
     ]
   }
 };

@@ -329,8 +329,9 @@ export default function CounterPickPage() {
                         <div className="relative w-14 aspect-video overflow-hidden rounded shadow-lg border border-slate-700">
                           <Image
                             src={getHeroImageUrl(hero.img)}
+                            fill
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform"
-                            alt=""
+                            alt={hero.localized_name}
                           />
                         </div>
                         <div className="flex-1 overflow-hidden">
