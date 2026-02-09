@@ -12,6 +12,7 @@ import {
   Matchup,
 } from "@/lib/dotaApi";
 import { Loader2, RefreshCw, Trash2, TrendingUp } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 
 export default function CounterPickPage() {
@@ -122,8 +123,13 @@ export default function CounterPickPage() {
       const newTeam = [...currentTeam];
       newTeam[emptySlotIndex] = hero;
 
-      if (targetTeam === "radiant") setRadiantTeam(newTeam);
-      else setDireTeam(newTeam);
+      if (targetTeam === "radiant") {
+        setRadiantTeam(newTeam);
+        setActiveTeam("dire");
+      } else {
+        setDireTeam(newTeam);
+        setActiveTeam("radiant");
+      }
 
       if (!matchupsCache[hero.id]) {
         const matchups = await fetchHeroMatchups(hero.id);
@@ -207,7 +213,7 @@ export default function CounterPickPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0a0d14] bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-blue-900/10 via-slate-950 to-[#0a0d14] text-slate-200 p-4 md:p-8">
+    <main className="min-h-screen bg-[#0a0d14] bg-[radial-gradient(circle_at_top,var(--tw-gradient-stops))] from-blue-900/10 via-slate-950 to-[#0a0d14] text-slate-200 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         <header className="flex flex-col lg:flex-row justify-between items-center mb-8 border-b border-slate-800/50 pb-6 gap-6">
           <div className="flex flex-col items-center lg:items-start text-center lg:text-left">
@@ -232,9 +238,9 @@ export default function CounterPickPage() {
               <span className="text-slate-400">Win Probability</span>
               <span className="text-red-500">Dire</span>
             </div>
-            <div className="h-3 w-full bg-slate-900 rounded-sm border border-slate-800 p-[1px] flex relative group">
+            <div className="h-3 w-full bg-slate-900 rounded-sm border border-slate-800 p-px flex relative group">
               <div
-                className="h-full bg-gradient-to-r from-green-600 to-green-400 transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(34,197,94,0.3)]"
+                className="h-full bg-linear-to-r from-green-600 to-green-400 transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(34,197,94,0.3)]"
                 style={{ width: `${50 + teamAdvantage * 100}%` }}
               ></div>
               <div className="absolute inset-0 flex items-center justify-center">
@@ -320,8 +326,8 @@ export default function CounterPickPage() {
                         <span className="text-[10px] font-black text-slate-600 w-4">
                           {idx + 1}
                         </span>
-                        <div className="relative w-14 aspect-[16/9] overflow-hidden rounded shadow-lg border border-slate-700">
-                          <img
+                        <div className="relative w-14 aspect-video overflow-hidden rounded shadow-lg border border-slate-700">
+                          <Image
                             src={getHeroImageUrl(hero.img)}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform"
                             alt=""
@@ -362,10 +368,11 @@ export default function CounterPickPage() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <img
+              <Image
                 src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png"
                 alt="Buy Me A Coffee"
-                style={{ height: "60px", width: "217px" }}
+                width={217}
+                height={60}
               />
             </a>
           </div>
