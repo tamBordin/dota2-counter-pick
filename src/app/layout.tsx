@@ -14,18 +14,20 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Dota 2 Counter Pick - Draft & Synergy Analyzer",
-  description: "Analyze hero matchups, team composition, and find the best counter picks for your Dota 2 matches using real-time API data.",
+  description:
+    "Analyze hero matchups, team composition, and find the best counter picks for your Dota 2 matches using real-time API data.",
   openGraph: {
     title: "Dota 2 Counter Pick - Draft Analyzer",
-    description: "Find the best heroes to counter your enemies and balance your team draft. Real-time stats & smart suggestions.",
+    description:
+      "Find the best heroes to counter your enemies and balance your team draft. Real-time stats & smart suggestions.",
     url: "https://dota2-counter-pick.vercel.app/",
     siteName: "Dota 2 Counter Pick",
     images: [
       {
-        url: "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/world/roshan.png",
+        url: "https://cdn.steamstatic.com/apps/dota2/images/dota2_social.jpg",
         width: 1200,
         height: 630,
-        alt: "Dota 2 Counter Pick",
+        alt: "Dota 2 Counter Pick - Draft Analyzer",
       },
     ],
     locale: "en_US",
@@ -35,7 +37,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Dota 2 Counter Pick - Draft Analyzer",
     description: "Counter enemy drafts and analyze team balance with real-time Dota 2 stats.",
-    images: ["https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/world/roshan.png"],
+    images: ["https://cdn.steamstatic.com/apps/dota2/images/dota2_social.jpg"],
   },
 };
 

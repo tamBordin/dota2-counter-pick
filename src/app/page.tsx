@@ -1,18 +1,18 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import DraftBoard from "@/components/DraftBoard";
+import HeroGrid from "@/components/HeroGrid";
+import TeamAnalyzer from "@/components/TeamAnalyzer";
+import { calculateAdvantage } from "@/lib/counterLogic";
 import {
   fetchHeroes,
   fetchHeroMatchups,
+  getHeroImageUrl,
   HeroStats,
   Matchup,
-  getHeroImageUrl,
 } from "@/lib/dotaApi";
-import { calculateAdvantage } from "@/lib/counterLogic";
-import HeroGrid from "@/components/HeroGrid";
-import DraftBoard from "@/components/DraftBoard";
-import TeamAnalyzer from "@/components/TeamAnalyzer";
-import { Loader2, TrendingUp, Trash2, RefreshCw } from "lucide-react";
+import { Loader2, RefreshCw, Trash2, TrendingUp } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 export default function CounterPickPage() {
   const [allHeroes, setAllHeroes] = useState<HeroStats[]>([]);
