@@ -21,6 +21,6 @@ export async function GET() {
     throw new Error('Invalid response from Valve');
   } catch (error) {
     console.error('Failed to fetch patch from Valve:', error);
-    return NextResponse.json({ version: '7.40c' }, { status: 500 });
+    return NextResponse.json({ version: 'No data' }, { status: 500 });
   }
 }
