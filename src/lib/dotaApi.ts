@@ -1,7 +1,7 @@
-import axios from 'axios';
 import heroesData from '@/data/heroes.json';
 import matchupsData from '@/data/matchups.json';
 import { Heroes } from '@/types/heros';
+import axios from 'axios';
 
 const BASE_URL = 'https://api.opendota.com/api';
 
