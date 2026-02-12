@@ -1,7 +1,13 @@
 "use client";
 
-import { HeroStats, getHeroImageUrl } from "@/lib/dotaApi";
-import { Plus, Search } from "lucide-react";
+import {
+  HeroStats,
+  getHeroImageUrl,
+  getHeroWinRate,
+  isProMeta,
+  isTrending,
+} from "@/lib/dotaApi";
+import { Plus, Search, Trophy, Flame } from "lucide-react";
 import Image from "next/image";
 import React, { useState } from "react";
 
@@ -136,6 +142,10 @@ const HeroGrid: React.FC<HeroGridProps> = ({
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 md:gap-4">
                 {attrHeroes.map((hero) => {
                   const isSelected = selectedHeroIds.includes(hero.id);
+                  const isPro = isProMeta(hero);
+                  const isHot = isTrending(hero);
+                  const winRate = getHeroWinRate(hero);
+
                   return (
                     <div
                       key={hero.id}
@@ -151,6 +161,38 @@ const HeroGrid: React.FC<HeroGridProps> = ({
                         fill
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-125"
                       />
+
+                      {/* Meta Badges */}
+                      <div className="absolute top-1 left-1 flex flex-col gap-1 z-10">
+                        {isPro && (
+                          <div
+                            className="bg-yellow-500/90 text-black p-0.5 rounded shadow-lg backdrop-blur-sm"
+                            title="Pro Favorite"
+                          >
+                            <Trophy size={8} strokeWidth={3} />
+                          </div>
+                        )}
+                        {isHot && (
+                          <div
+                            className="bg-orange-500/90 text-white p-0.5 rounded shadow-lg backdrop-blur-sm"
+                            title="Trending Now"
+                          >
+                            <Flame size={8} strokeWidth={3} />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Win Rate Badge */}
+                      <div
+                        className={`absolute top-1 right-1 text-[7px] font-black px-1 py-0.5 rounded backdrop-blur-md shadow-lg ${
+                          winRate >= 50
+                            ? "bg-green-500/80 text-white"
+                            : "bg-red-500/80 text-white"
+                        }`}
+                      >
+                        {winRate.toFixed(0)}%
+                      </div>
+
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-100 group-hover:opacity-0 transition-opacity"></div>
                       <div className="absolute bottom-0 left-0 right-0 p-1 text-[8px] font-black text-center text-slate-300 truncate uppercase tracking-tighter z-0 group-hover:opacity-0 transition-opacity">
                         {hero.localized_name}

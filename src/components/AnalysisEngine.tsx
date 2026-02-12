@@ -2,8 +2,14 @@
 
 import React from "react";
 import Image from "next/image";
-import { TrendingUp } from "lucide-react";
-import { HeroStats, getHeroImageUrl } from "@/lib/dotaApi";
+import { TrendingUp, Trophy, Flame } from "lucide-react";
+import {
+  HeroStats,
+  getHeroImageUrl,
+  getHeroWinRate,
+  isProMeta,
+  isTrending,
+} from "@/lib/dotaApi";
 import { CounterScore } from "@/lib/counterLogic";
 
 interface AnalysisEngineProps {
@@ -14,6 +20,62 @@ interface AnalysisEngineProps {
   allHeroes: HeroStats[];
   onSelectHero: (hero: HeroStats) => void;
 }
+
+const SuggestionItem = ({
+  hero,
+  score,
+  idx,
+  onSelect,
+}: {
+  hero: HeroStats;
+  score: number;
+  idx: number;
+  onSelect: () => void;
+}) => {
+  const isPro = isProMeta(hero);
+  const isHot = isTrending(hero);
+  const winRate = getHeroWinRate(hero);
+
+  return (
+    <div
+      className="flex items-center gap-3 p-2 bg-slate-800/30 rounded border border-white/5 hover:border-blue-500/50 hover:bg-slate-800/80 transition-all cursor-pointer group"
+      onClick={onSelect}
+    >
+      <span className="text-[10px] font-black text-slate-600 w-4">
+        {idx + 1}
+      </span>
+      <div className="relative w-14 aspect-video overflow-hidden rounded shadow-lg border border-slate-700">
+        <Image
+          src={getHeroImageUrl(hero.img)}
+          fill
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform"
+          alt={hero.localized_name}
+        />
+      </div>
+      <div className="flex-1 overflow-hidden">
+        <div className="flex items-center gap-1.5">
+          <div className="text-[11px] font-bold truncate group-hover:text-white transition-colors">
+            {hero.localized_name}
+          </div>
+          {isPro && <Trophy size={10} className="text-yellow-500" />}
+          {isHot && <Flame size={10} className="text-orange-500" />}
+        </div>
+        <div className="flex justify-between items-center mt-0.5">
+          <div
+            className={`text-[9px] font-black uppercase tracking-tighter ${score > 0 ? "text-green-500" : "text-red-500"}`}
+          >
+            +{(score * 100).toFixed(1)}% Edge
+          </div>
+          <div
+            className={`text-[8px] font-bold px-1 rounded ${winRate >= 50 ? "text-green-400 bg-green-900/30" : "text-red-400 bg-red-900/30"}`}
+          >
+            {winRate.toFixed(1)}% WR
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const AnalysisEngine: React.FC<AnalysisEngineProps> = ({
   suggestions,
@@ -37,33 +99,13 @@ const AnalysisEngine: React.FC<AnalysisEngineProps> = ({
                 const hero = allHeroes.find((h) => h.id === s.heroId);
                 if (!hero) return null;
                 return (
-                  <div
+                  <SuggestionItem
                     key={hero.id}
-                    className="flex items-center gap-3 p-2 bg-slate-800/30 rounded border border-white/5 hover:border-blue-500/50 hover:bg-slate-800/80 transition-all cursor-pointer group"
-                    onClick={() => onSelectHero(hero)}
-                  >
-                    <span className="text-[10px] font-black text-slate-600 w-4">
-                      {idx + 1}
-                    </span>
-                    <div className="relative w-14 aspect-video overflow-hidden rounded shadow-lg border border-slate-700">
-                      <Image
-                        src={getHeroImageUrl(hero.img)}
-                        fill
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform"
-                        alt={hero.localized_name}
-                      />
-                    </div>
-                    <div className="flex-1 overflow-hidden">
-                      <div className="text-[11px] font-bold truncate group-hover:text-white transition-colors">
-                        {hero.localized_name}
-                      </div>
-                      <div
-                        className={`text-[9px] font-black uppercase tracking-tighter ${s.score > 0 ? "text-green-500" : "text-red-500"}`}
-                      >
-                        +{(s.score * 100).toFixed(1)}% Edge
-                      </div>
-                    </div>
-                  </div>
+                    hero={hero}
+                    score={s.score}
+                    idx={idx}
+                    onSelect={() => onSelectHero(hero)}
+                  />
                 );
               })}
             </div>
@@ -78,33 +120,13 @@ const AnalysisEngine: React.FC<AnalysisEngineProps> = ({
                 const hero = allHeroes.find((h) => h.id === s.heroId);
                 if (!hero) return null;
                 return (
-                  <div
+                  <SuggestionItem
                     key={hero.id}
-                    className="flex items-center gap-3 p-2 bg-slate-800/30 rounded border border-white/5 hover:border-blue-500/50 hover:bg-slate-800/80 transition-all cursor-pointer group"
-                    onClick={() => onSelectHero(hero)}
-                  >
-                    <span className="text-[10px] font-black text-slate-600 w-4">
-                      {idx + 1}
-                    </span>
-                    <div className="relative w-14 aspect-video overflow-hidden rounded shadow-lg border border-slate-700">
-                      <Image
-                        src={getHeroImageUrl(hero.img)}
-                        fill
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform"
-                        alt={hero.localized_name}
-                      />
-                    </div>
-                    <div className="flex-1 overflow-hidden">
-                      <div className="text-[11px] font-bold truncate group-hover:text-white transition-colors">
-                        {hero.localized_name}
-                      </div>
-                      <div
-                        className={`text-[9px] font-black uppercase tracking-tighter ${s.score > 0 ? "text-green-500" : "text-red-500"}`}
-                      >
-                        +{(s.score * 100).toFixed(1)}% Edge
-                      </div>
-                    </div>
-                  </div>
+                    hero={hero}
+                    score={s.score}
+                    idx={idx}
+                    onSelect={() => onSelectHero(hero)}
+                  />
                 );
               })}
             </div>
