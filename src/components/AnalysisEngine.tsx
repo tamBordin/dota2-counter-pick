@@ -2,7 +2,14 @@
 
 import React from "react";
 import Image from "next/image";
-import { TrendingUp, Trophy, Flame } from "lucide-react";
+import {
+  TrendingUp,
+  Trophy,
+  Flame,
+  Target,
+  Star,
+  AlertTriangle,
+} from "lucide-react";
 import {
   HeroStats,
   getHeroImageUrl,
@@ -10,7 +17,7 @@ import {
   isProMeta,
   isTrending,
 } from "@/lib/dotaApi";
-import { CounterScore } from "@/lib/counterLogic";
+import { CounterScore, CounterType } from "@/lib/counterLogic";
 
 interface AnalysisEngineProps {
   suggestions: {
@@ -21,14 +28,48 @@ interface AnalysisEngineProps {
   onSelectHero: (hero: HeroStats) => void;
 }
 
+const CounterTypeBadge = ({ type }: { type: CounterType }) => {
+  switch (type) {
+    case "Meta":
+      return (
+        <div
+          className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-purple-500/20 border border-purple-500/30 text-[8px] font-black text-purple-300 uppercase tracking-tighter"
+          title="Meta Pick: High Win Rate & Advantage"
+        >
+          <Star size={8} className="fill-current" /> META
+        </div>
+      );
+    case "Specialist":
+      return (
+        <div
+          className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-500/20 border border-blue-500/30 text-[8px] font-black text-blue-300 uppercase tracking-tighter"
+          title="Specialist: Hard Counter"
+        >
+          <Target size={8} /> SPEC
+        </div>
+      );
+    case "Situational":
+      return (
+        <div
+          className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-orange-500/20 border border-orange-500/30 text-[8px] font-black text-orange-300 uppercase tracking-tighter"
+          title="Situational: Extreme Advantage"
+        >
+          <AlertTriangle size={8} /> SITU
+        </div>
+      );
+    default:
+      return null;
+  }
+};
+
 const SuggestionItem = ({
   hero,
-  score,
+  suggestion, // Pass the full suggestion object
   idx,
   onSelect,
 }: {
   hero: HeroStats;
-  score: number;
+  suggestion: CounterScore;
   idx: number;
   onSelect: () => void;
 }) => {
@@ -38,13 +79,19 @@ const SuggestionItem = ({
 
   return (
     <div
-      className="flex items-center gap-3 p-2 bg-slate-800/30 rounded border border-white/5 hover:border-blue-500/50 hover:bg-slate-800/80 transition-all cursor-pointer group"
+      className="flex items-center gap-3 p-2 bg-slate-800/30 rounded border border-white/5 hover:border-blue-500/50 hover:bg-slate-800/80 transition-all cursor-pointer group relative overflow-hidden"
       onClick={onSelect}
     >
-      <span className="text-[10px] font-black text-slate-600 w-4">
+      {/* Advantage Bar Background */}
+      <div
+        className="absolute left-0 bottom-0 top-0 bg-gradient-to-r from-blue-500/5 to-transparent transition-all duration-500"
+        style={{ width: `${Math.min(suggestion.score * 500, 100)}%` }} // Visual indicator of advantage strength
+      ></div>
+
+      <span className="text-[10px] font-black text-slate-600 w-4 relative z-10">
         {idx + 1}
       </span>
-      <div className="relative w-14 aspect-video overflow-hidden rounded shadow-lg border border-slate-700">
+      <div className="relative w-12 aspect-video overflow-hidden rounded shadow-lg border border-slate-700 z-10">
         <Image
           src={getHeroImageUrl(hero.img)}
           fill
@@ -52,20 +99,30 @@ const SuggestionItem = ({
           alt={hero.localized_name}
         />
       </div>
-      <div className="flex-1 overflow-hidden">
-        <div className="flex items-center gap-1.5">
-          <div className="text-[11px] font-bold truncate group-hover:text-white transition-colors">
-            {hero.localized_name}
+      <div className="flex-1 overflow-hidden relative z-10">
+        <div className="flex items-center justify-between mb-0.5">
+          <div className="flex items-center gap-1.5">
+            <div className="text-[11px] font-bold truncate group-hover:text-white transition-colors">
+              {hero.localized_name}
+            </div>
+            {isPro && <Trophy size={10} className="text-yellow-500" />}
+            {isHot && <Flame size={10} className="text-orange-500" />}
           </div>
-          {isPro && <Trophy size={10} className="text-yellow-500" />}
-          {isHot && <Flame size={10} className="text-orange-500" />}
+          <CounterTypeBadge type={suggestion.counterType} />
         </div>
-        <div className="flex justify-between items-center mt-0.5">
-          <div
-            className={`text-[9px] font-black uppercase tracking-tighter ${score > 0 ? "text-green-500" : "text-red-500"}`}
-          >
-            +{(score * 100).toFixed(1)}% Edge
+
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <div
+              className={`text-[9px] font-black uppercase tracking-tighter ${suggestion.score > 0 ? "text-green-500" : "text-red-500"}`}
+            >
+              +{(suggestion.score * 100).toFixed(1)}%
+            </div>
+            <div className="text-[8px] text-slate-500 font-bold uppercase">
+              Advantage
+            </div>
           </div>
+
           <div
             className={`text-[8px] font-bold px-1 rounded ${winRate >= 50 ? "text-green-400 bg-green-900/30" : "text-red-400 bg-red-900/30"}`}
           >
@@ -102,7 +159,7 @@ const AnalysisEngine: React.FC<AnalysisEngineProps> = ({
                   <SuggestionItem
                     key={hero.id}
                     hero={hero}
-                    score={s.score}
+                    suggestion={s}
                     idx={idx}
                     onSelect={() => onSelectHero(hero)}
                   />
@@ -123,7 +180,7 @@ const AnalysisEngine: React.FC<AnalysisEngineProps> = ({
                   <SuggestionItem
                     key={hero.id}
                     hero={hero}
-                    score={s.score}
+                    suggestion={s}
                     idx={idx}
                     onSelect={() => onSelectHero(hero)}
                   />

@@ -7,7 +7,7 @@ import {
   isProMeta,
   isTrending,
 } from "@/lib/dotaApi";
-import { Plus, Search, Trophy, Flame } from "lucide-react";
+import { Filter, Flame, Plus, Search, Trophy } from "lucide-react";
 import Image from "next/image";
 import React, { useState } from "react";
 
@@ -23,216 +23,157 @@ const HeroGrid: React.FC<HeroGridProps> = ({
   selectedHeroIds,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedRole, setSelectedRole] = useState<string | null>(null);
-
-  const roles = [
-    "Carry",
-    "Support",
-    "Nuker",
-    "Disabler",
-    "Durable",
-    "Initiator",
-  ];
+  const [selectedAttr, setSelectedAttr] = useState<string>("all");
 
   const primaryAttrs = [
-    {
-      key: "str",
-      label: "Strength",
-      color: "text-red-500",
-      bg: "bg-red-500/5",
-    },
-    {
-      key: "agi",
-      label: "Agility",
-      color: "text-green-500",
-      bg: "bg-green-500/5",
-    },
-    {
-      key: "int",
-      label: "Intelligence",
-      color: "text-blue-400",
-      bg: "bg-blue-400/5",
-    },
-    {
-      key: "all",
-      label: "Universal",
-      color: "text-purple-400",
-      bg: "bg-purple-400/5",
-    },
+    { key: "all", label: "All", color: "text-white" },
+    { key: "str", label: "Strength", color: "text-red-500" },
+    { key: "agi", label: "Agility", color: "text-green-500" },
+    { key: "int", label: "Intelligence", color: "text-blue-400" },
+    { key: "all_attr", label: "Universal", color: "text-purple-400" }, // Note: API uses 'all' for universal usually, check logic below
   ];
 
   const filteredHeroes = heroes.filter((hero) => {
     const matchesSearch = hero.localized_name
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
-    const matchesRole = !selectedRole || hero.roles.includes(selectedRole);
-    return matchesSearch && matchesRole;
+    const matchesAttr =
+      selectedAttr === "all" ||
+      (selectedAttr === "all_attr"
+        ? hero.primary_attr === "all"
+        : hero.primary_attr === selectedAttr);
+    return matchesSearch && matchesAttr;
   });
 
   return (
-    <div className="bg-slate-900/40 backdrop-blur-md rounded-lg border border-slate-800 shadow-2xl overflow-hidden">
-      <div className="p-4 md:p-6 bg-slate-900/60 border-b border-slate-800">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
-              size={16}
-            />
-            <input
-              type="text"
-              placeholder="Search heroes by name..."
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-700 rounded-md text-sm text-white focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 transition-all placeholder:text-slate-600"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
+    <div className="bg-slate-900/40 backdrop-blur-md rounded-2xl border border-slate-800 shadow-2xl overflow-hidden flex flex-col h-[800px]">
+      {/* Header / Filter Bar */}
+      <div className="p-4 md:p-6 bg-slate-900/80 border-b border-slate-800 flex flex-col gap-4 sticky top-0 z-20">
+        <div className="relative">
+          <Search
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
+            size={18}
+          />
+          <input
+            type="text"
+            placeholder="Search heroes..."
+            className="w-full pl-12 pr-4 py-3 bg-slate-950/50 border border-slate-700/50 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/10 transition-all placeholder:text-slate-600"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
 
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+          {primaryAttrs.map((attr) => (
             <button
-              onClick={() => setSelectedRole(null)}
-              className={`whitespace-nowrap px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-tighter transition-all border ${
-                selectedRole === null
-                  ? "bg-white text-black border-white"
-                  : "bg-slate-950 border-slate-800 text-slate-500 hover:text-slate-300"
+              key={attr.key}
+              onClick={() => setSelectedAttr(attr.key)}
+              className={`whitespace-nowrap px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition-all border ${
+                selectedAttr === attr.key
+                  ? "bg-slate-800 border-slate-600 text-white shadow-lg"
+                  : "bg-transparent border-transparent text-slate-500 hover:bg-slate-800/50 hover:text-slate-300"
               }`}
             >
-              All Roles
+              <span className={selectedAttr === attr.key ? attr.color : ""}>
+                {attr.label}
+              </span>
             </button>
-            {roles.map((role) => (
-              <button
-                key={role}
-                onClick={() =>
-                  setSelectedRole(role === selectedRole ? null : role)
-                }
-                className={`whitespace-nowrap px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-tighter transition-all border ${
-                  selectedRole === role
-                    ? "bg-blue-600 text-white border-blue-500 shadow-[0_0_10px_rgba(37,99,235,0.3)]"
-                    : "bg-slate-950 border-slate-800 text-slate-500 hover:text-slate-300"
-                }`}
-              >
-                {role}
-              </button>
-            ))}
-          </div>
+          ))}
         </div>
       </div>
 
-      <div className="p-4 md:p-6 space-y-10 max-h-[550px] overflow-y-auto pr-2 custom-scrollbar">
-        {primaryAttrs.map((attr) => {
-          const attrHeroes = filteredHeroes.filter(
-            (h) => h.primary_attr === attr.key,
-          );
-          if (attrHeroes.length === 0) return null;
+      {/* Grid Content */}
+      <div className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3 md:gap-4">
+          {filteredHeroes.map((hero) => {
+            const isSelected = selectedHeroIds.includes(hero.id);
+            const isPro = isProMeta(hero);
+            const isHot = isTrending(hero);
+            const winRate = getHeroWinRate(hero);
 
-          return (
-            <div
-              key={attr.key}
-              className={`p-4 rounded-lg ${attr.bg} border border-white/5`}
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <div
-                  className={`w-1 h-4 rounded-full ${attr.color.replace("text", "bg")}`}
-                ></div>
-                <h4
-                  className={`text-[11px] font-black uppercase tracking-[0.2em] ${attr.color}`}
-                >
-                  {attr.label}
-                </h4>
-              </div>
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 md:gap-4">
-                {attrHeroes.map((hero) => {
-                  const isSelected = selectedHeroIds.includes(hero.id);
-                  const isPro = isProMeta(hero);
-                  const isHot = isTrending(hero);
-                  const winRate = getHeroWinRate(hero);
+            return (
+              <div
+                key={hero.id}
+                className={`relative group aspect-[3/4] rounded-lg overflow-hidden border-2 transition-all duration-300 ${
+                  isSelected
+                    ? "opacity-20 grayscale border-transparent pointer-events-none"
+                    : "border-slate-800 hover:border-slate-600 hover:shadow-xl hover:-translate-y-1 bg-slate-900"
+                }`}
+              >
+                <Image
+                  src={getHeroImageUrl(hero.img)}
+                  alt={hero.localized_name}
+                  fill
+                  className="object-cover transition-transform duration-500 group-hover:scale-110"
+                />
 
-                  return (
+                {/* Overlays */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
+
+                {/* Badges */}
+                <div className="absolute top-1 left-1 flex flex-col gap-1 opacity-100 group-hover:opacity-0 transition-opacity duration-200">
+                  {isPro && (
+                    <div className="bg-yellow-500 text-black p-1 rounded-full shadow-md">
+                      <Trophy size={10} strokeWidth={3} />
+                    </div>
+                  )}
+                  {isHot && (
+                    <div className="bg-orange-500 text-white p-1 rounded-full shadow-md">
+                      <Flame size={10} strokeWidth={3} />
+                    </div>
+                  )}
+                </div>
+
+                {/* Name */}
+                <div className="absolute bottom-0 left-0 right-0 p-2 text-center group-hover:opacity-0 transition-opacity duration-200">
+                  <span className="text-[10px] md:text-xs font-bold text-white leading-tight drop-shadow-md">
+                    {hero.localized_name}
+                  </span>
+                </div>
+
+                {/* Hover Actions */}
+                <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-200 flex flex-col p-2">
+                  <div className="text-center mb-2">
+                    <div className="text-xs font-black text-white truncate">
+                      {hero.localized_name}
+                    </div>
                     <div
-                      key={hero.id}
-                      className={`relative group aspect-[16/9] overflow-hidden rounded shadow-xl transition-all duration-300 ${
-                        isSelected
-                          ? "opacity-10 grayscale scale-90 border-transparent pointer-events-none"
-                          : "hover:scale-110 hover:z-20 cursor-pointer border border-white/10"
+                      className={`text-[10px] font-bold ${
+                        winRate >= 50 ? "text-green-400" : "text-red-400"
                       }`}
                     >
-                      <Image
-                        src={getHeroImageUrl(hero.img)}
-                        alt={hero.localized_name}
-                        fill
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-125"
-                      />
-
-                      {/* Meta Badges */}
-                      <div className="absolute top-1 left-1 flex flex-col gap-1 z-10">
-                        {isPro && (
-                          <div
-                            className="bg-yellow-500/90 text-black p-0.5 rounded shadow-lg backdrop-blur-sm"
-                            title="Pro Favorite"
-                          >
-                            <Trophy size={8} strokeWidth={3} />
-                          </div>
-                        )}
-                        {isHot && (
-                          <div
-                            className="bg-orange-500/90 text-white p-0.5 rounded shadow-lg backdrop-blur-sm"
-                            title="Trending Now"
-                          >
-                            <Flame size={8} strokeWidth={3} />
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Win Rate Badge */}
-                      <div
-                        className={`absolute top-1 right-1 text-[7px] font-black px-1 py-0.5 rounded backdrop-blur-md shadow-lg ${
-                          winRate >= 50
-                            ? "bg-green-500/80 text-white"
-                            : "bg-red-500/80 text-white"
-                        }`}
-                      >
-                        {winRate.toFixed(0)}%
-                      </div>
-
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-100 group-hover:opacity-0 transition-opacity"></div>
-                      <div className="absolute bottom-0 left-0 right-0 p-1 text-[8px] font-black text-center text-slate-300 truncate uppercase tracking-tighter z-0 group-hover:opacity-0 transition-opacity">
-                        {hero.localized_name}
-                      </div>
-
-                      <div className="absolute inset-0 flex opacity-0 group-hover:opacity-100 transition-all duration-300 z-10 translate-y-2 group-hover:translate-y-0">
-                        <div
-                          onClick={() => onSelectHero(hero, true)}
-                          className="w-1/2 h-full bg-green-600/80 backdrop-blur-[2px] flex flex-col items-center justify-center hover:bg-green-500 transition-colors border-r border-white/10"
-                        >
-                          <Plus
-                            size={14}
-                            className="text-white drop-shadow-lg"
-                            strokeWidth={3}
-                          />
-                          <span className="text-[7px] font-black text-white uppercase mt-1">
-                            Pick Us
-                          </span>
-                        </div>
-                        <div
-                          onClick={() => onSelectHero(hero, false)}
-                          className="w-1/2 h-full bg-red-600/80 backdrop-blur-[2px] flex flex-col items-center justify-center hover:bg-red-500 transition-colors"
-                        >
-                          <Plus
-                            size={14}
-                            className="text-white drop-shadow-lg"
-                            strokeWidth={3}
-                          />
-                          <span className="text-[7px] font-black text-white uppercase mt-1">
-                            Pick Em
-                          </span>
-                        </div>
-                      </div>
+                      {winRate.toFixed(1)}% WR
                     </div>
-                  );
-                })}
+                  </div>
+
+                  <div className="flex flex-col gap-2 mt-auto">
+                    <button
+                      onClick={() => onSelectHero(hero, true)}
+                      className="flex items-center justify-center gap-1.5 py-1.5 rounded bg-green-600 hover:bg-green-500 text-white text-[10px] font-black uppercase tracking-wide transition-colors shadow-lg"
+                    >
+                      <Plus size={12} strokeWidth={3} /> Pick Us
+                    </button>
+                    <button
+                      onClick={() => onSelectHero(hero, false)}
+                      className="flex items-center justify-center gap-1.5 py-1.5 rounded bg-red-600 hover:bg-red-500 text-white text-[10px] font-black uppercase tracking-wide transition-colors shadow-lg"
+                    >
+                      <Plus size={12} strokeWidth={3} /> Pick Em
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
+
+        {filteredHeroes.length === 0 && (
+          <div className="h-64 flex flex-col items-center justify-center text-slate-500">
+            <Filter size={48} className="mb-4 opacity-50" />
+            <p className="text-sm font-medium">
+              No heroes found matching criteria
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
