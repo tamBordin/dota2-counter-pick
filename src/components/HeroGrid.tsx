@@ -1,5 +1,6 @@
 "use client";
 
+import { heroAliases } from "@/data/aliases";
 import {
   HeroStats,
   getHeroImageUrl,
@@ -34,9 +35,20 @@ const HeroGrid: React.FC<HeroGridProps> = ({
   ];
 
   const filteredHeroes = heroes.filter((hero) => {
-    const matchesSearch = hero.localized_name
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
+    const searchLower = searchTerm.toLowerCase();
+    const heroName = hero.localized_name.toLowerCase();
+
+    // Check Name
+    let matchesSearch = heroName.includes(searchLower);
+
+    // Check Aliases if not found by name
+    if (!matchesSearch) {
+      const aliases = heroAliases[hero.localized_name] || [];
+      matchesSearch = aliases.some((alias) =>
+        alias.toLowerCase().includes(searchLower),
+      );
+    }
+
     const matchesAttr =
       selectedAttr === "all" ||
       (selectedAttr === "all_attr"
@@ -56,7 +68,7 @@ const HeroGrid: React.FC<HeroGridProps> = ({
           />
           <input
             type="text"
-            placeholder="Search heroes..."
+            placeholder="Search heroes (e.g. 'AM', 'Pudge', 'ES')..."
             className="w-full pl-12 pr-4 py-3 bg-slate-950/50 border border-slate-700/50 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/10 transition-all placeholder:text-slate-600"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -170,7 +182,7 @@ const HeroGrid: React.FC<HeroGridProps> = ({
           <div className="h-64 flex flex-col items-center justify-center text-slate-500">
             <Filter size={48} className="mb-4 opacity-50" />
             <p className="text-sm font-medium">
-              No heroes found matching criteria
+              No heroes found matching &quot;{searchTerm}&quot;
             </p>
           </div>
         )}
