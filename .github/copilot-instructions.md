@@ -2,6 +2,8 @@
 
 Purpose: quick reference for Copilot sessions so suggestions and edits are aligned with this repository's structure and conventions.
 
+หมายเหตุการสื่อสาร: พูดกับผู้ใช้เป็นภาษาไทยเท่านั้น.
+
 ---
 
 ## Quick commands (build / dev / lint / data)
