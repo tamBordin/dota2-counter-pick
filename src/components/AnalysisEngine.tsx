@@ -1,15 +1,6 @@
 "use client";
 
-import React from "react";
-import Image from "next/image";
-import {
-  TrendingUp,
-  Trophy,
-  Flame,
-  Target,
-  Star,
-  AlertTriangle,
-} from "lucide-react";
+import { CounterScore, CounterType } from "@/lib/counterLogic";
 import {
   HeroStats,
   getHeroImageUrl,
@@ -17,7 +8,16 @@ import {
   isProMeta,
   isTrending,
 } from "@/lib/dotaApi";
-import { CounterScore, CounterType } from "@/lib/counterLogic";
+import {
+  AlertTriangle,
+  Flame,
+  Star,
+  Target,
+  TrendingUp,
+  Trophy,
+} from "lucide-react";
+import Image from "next/image";
+import React from "react";
 
 interface AnalysisEngineProps {
   suggestions: {

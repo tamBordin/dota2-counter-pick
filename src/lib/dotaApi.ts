@@ -58,9 +58,6 @@ export const getHeroWinRate = (hero: HeroStats): number => {
 };
 
 export const isProMeta = (hero: HeroStats): boolean => {
-  // Simple heuristic: If pro picks + bans is high relative to others
-  // In a real app, we might calculate percentiles.
-  // For now, let's say > 50 combined interactions is "Meta"
   const interactions = (hero.pro_pick || 0) + (hero.pro_ban || 0);
   return interactions > 50;
 };
@@ -68,7 +65,6 @@ export const isProMeta = (hero: HeroStats): boolean => {
 export const isTrending = (hero: HeroStats): boolean => {
   if (!hero.pub_pick_trend || hero.pub_pick_trend.length < 2) return false;
 
-  // Compare last day with average of last 3 days to see recent spike
   const last = hero.pub_pick_trend[hero.pub_pick_trend.length - 1];
   const prev = hero.pub_pick_trend[hero.pub_pick_trend.length - 2];
 

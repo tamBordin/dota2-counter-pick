@@ -1,13 +1,13 @@
 "use client";
 
+import AnalysisEngine from "@/components/AnalysisEngine";
+import AppFooter from "@/components/AppFooter";
+import AppHeader from "@/components/AppHeader";
 import DraftBoard from "@/components/DraftBoard";
 import HeroGrid from "@/components/HeroGrid";
 import TeamAnalyzer from "@/components/TeamAnalyzer";
-import AppHeader from "@/components/AppHeader";
-import AppFooter from "@/components/AppFooter";
-import AnalysisEngine from "@/components/AnalysisEngine";
-import { Loader2, RefreshCw } from "lucide-react";
 import { useDraft } from "@/hooks/useDraft";
+import { Loader2 } from "lucide-react";
 
 export default function CounterPickPage() {
   const {
@@ -73,12 +73,6 @@ export default function CounterPickPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           <div className="lg:col-span-3 order-2 lg:order-1">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
-                <RefreshCw size={14} className="text-blue-500" /> Choose Your
-                Heroes
-              </h3>
-            </div>
             <HeroGrid
               heroes={allHeroes}
               onSelectHero={handleSelectHero}

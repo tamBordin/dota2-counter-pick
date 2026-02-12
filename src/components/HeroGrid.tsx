@@ -8,9 +8,17 @@ import {
   isProMeta,
   isTrending,
 } from "@/lib/dotaApi";
-import { Filter, Flame, Plus, Search, Trophy } from "lucide-react";
+import {
+  ChevronDown,
+  Command,
+  Filter,
+  Flame,
+  Plus,
+  Search,
+  Trophy,
+} from "lucide-react";
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 interface HeroGridProps {
   heroes: HeroStats[];
@@ -25,79 +33,125 @@ const HeroGrid: React.FC<HeroGridProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedAttr, setSelectedAttr] = useState<string>("all");
+  const [showAll, setShowAll] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Hotkey to focus search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.key === "/" ||
+        (e.ctrlKey && e.key === "k") ||
+        (e.metaKey && e.key === "k")
+      ) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const primaryAttrs = [
     { key: "all", label: "All", color: "text-white" },
     { key: "str", label: "Strength", color: "text-red-500" },
     { key: "agi", label: "Agility", color: "text-green-500" },
     { key: "int", label: "Intelligence", color: "text-blue-400" },
-    { key: "all_attr", label: "Universal", color: "text-purple-400" }, // Note: API uses 'all' for universal usually, check logic below
+    { key: "all_attr", label: "Universal", color: "text-purple-400" },
   ];
 
+  // Filtering Logic
   const filteredHeroes = heroes.filter((hero) => {
     const searchLower = searchTerm.toLowerCase();
     const heroName = hero.localized_name.toLowerCase();
 
-    // Check Name
-    let matchesSearch = heroName.includes(searchLower);
-
-    // Check Aliases if not found by name
-    if (!matchesSearch) {
-      const aliases = heroAliases[hero.localized_name] || [];
-      matchesSearch = aliases.some((alias) =>
-        alias.toLowerCase().includes(searchLower),
-      );
+    // 1. Search Check
+    let matchesSearch = true;
+    if (searchLower) {
+      matchesSearch = heroName.includes(searchLower);
+      if (!matchesSearch) {
+        const aliases = heroAliases[hero.localized_name] || [];
+        matchesSearch = aliases.some((alias) =>
+          alias.toLowerCase().includes(searchLower),
+        );
+      }
     }
 
+    // 2. Attribute Check
     const matchesAttr =
       selectedAttr === "all" ||
       (selectedAttr === "all_attr"
         ? hero.primary_attr === "all"
         : hero.primary_attr === selectedAttr);
+
     return matchesSearch && matchesAttr;
   });
 
+  // Display Logic: Show fewer heroes by default unless searching or filtering
+  const isSearching = searchTerm.length > 0;
+  const isFiltering = selectedAttr !== "all";
+
+  const displayHeroes =
+    showAll || isSearching || isFiltering
+      ? filteredHeroes
+      : filteredHeroes
+          .filter((h) => isProMeta(h) || isTrending(h))
+          .slice(0, 30); // Show top 30 Meta/Trending initially
+
   return (
-    <div className="bg-slate-900/40 backdrop-blur-md rounded-2xl border border-slate-800 shadow-2xl overflow-hidden flex flex-col h-[800px]">
+    <div className="bg-slate-900/40 backdrop-blur-md rounded-2xl border border-slate-800 shadow-2xl overflow-hidden flex flex-col h-[550px] transition-all duration-500">
       {/* Header / Filter Bar */}
-      <div className="p-4 md:p-6 bg-slate-900/80 border-b border-slate-800 flex flex-col gap-4 sticky top-0 z-20">
-        <div className="relative">
+      <div className="p-4 bg-slate-900/80 border-b border-slate-800 flex flex-col gap-3 sticky top-0 z-20">
+        <div className="relative group">
           <Search
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
-            size={18}
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-400 transition-colors"
+            size={20}
           />
           <input
+            ref={searchInputRef}
             type="text"
-            placeholder="Search heroes (e.g. 'AM', 'Pudge', 'ES')..."
-            className="w-full pl-12 pr-4 py-3 bg-slate-950/50 border border-slate-700/50 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/10 transition-all placeholder:text-slate-600"
+            placeholder="Search heroes (e.g. 'AM', 'Pudge')..."
+            className="w-full pl-12 pr-12 py-3 bg-slate-950/50 border border-slate-700/50 rounded-xl text-base text-white focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/10 transition-all placeholder:text-slate-600 shadow-inner"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden md:flex items-center gap-1 text-slate-600 text-[10px] font-bold border border-slate-800 px-1.5 py-0.5 rounded bg-slate-900/50">
+            <Command size={10} /> K
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-          {primaryAttrs.map((attr) => (
-            <button
-              key={attr.key}
-              onClick={() => setSelectedAttr(attr.key)}
-              className={`whitespace-nowrap px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition-all border ${
-                selectedAttr === attr.key
-                  ? "bg-slate-800 border-slate-600 text-white shadow-lg"
-                  : "bg-transparent border-transparent text-slate-500 hover:bg-slate-800/50 hover:text-slate-300"
-              }`}
-            >
-              <span className={selectedAttr === attr.key ? attr.color : ""}>
-                {attr.label}
-              </span>
-            </button>
-          ))}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 overflow-x-hidden pb-1 no-scrollbar">
+            {primaryAttrs.map((attr) => (
+              <button
+                key={attr.key}
+                onClick={() => setSelectedAttr(attr.key)}
+                className={`whitespace-nowrap px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border ${
+                  selectedAttr === attr.key
+                    ? "bg-slate-800 border-slate-600 text-white shadow-lg scale-105"
+                    : "bg-transparent border-transparent text-slate-500 hover:bg-slate-800/50 hover:text-slate-300"
+                }`}
+              >
+                <span className={selectedAttr === attr.key ? attr.color : ""}>
+                  {attr.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Toggle Show All (Only visible when not searching/filtering) */}
+          {!isSearching && !isFiltering && (
+            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-auto">
+              {showAll ? "All Heroes" : "Top Meta"}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Grid Content */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar">
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3 md:gap-4">
-          {filteredHeroes.map((hero) => {
+      <div className="flex-1 overflow-y-auto p-4 custom-scrollbar relative">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3">
+          {displayHeroes.map((hero) => {
             const isSelected = selectedHeroIds.includes(hero.id);
             const isPro = isProMeta(hero);
             const isHot = isTrending(hero);
@@ -178,14 +232,30 @@ const HeroGrid: React.FC<HeroGridProps> = ({
           })}
         </div>
 
+        {/* Empty State */}
         {filteredHeroes.length === 0 && (
-          <div className="h-64 flex flex-col items-center justify-center text-slate-500">
-            <Filter size={48} className="mb-4 opacity-50" />
-            <p className="text-sm font-medium">
+          <div className="h-40 flex flex-col items-center justify-center text-slate-500">
+            <Filter size={32} className="mb-2 opacity-50" />
+            <p className="text-xs font-medium">
               No heroes found matching &quot;{searchTerm}&quot;
             </p>
           </div>
         )}
+
+        {/* "Show More" Trigger - Only show if hiding some heroes */}
+        {!showAll &&
+          !isSearching &&
+          !isFiltering &&
+          filteredHeroes.length > 30 && (
+            <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-900 to-transparent flex items-end justify-center pb-6 pointer-events-none">
+              <button
+                onClick={() => setShowAll(true)}
+                className="pointer-events-auto flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold uppercase tracking-widest rounded-full shadow-lg transition-all hover:scale-105"
+              >
+                Show All Heroes <ChevronDown size={14} />
+              </button>
+            </div>
+          )}
       </div>
     </div>
   );
