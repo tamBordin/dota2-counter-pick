@@ -16,8 +16,8 @@ export default function CounterPickPage() {
     radiantTeam,
     direTeam,
     loading,
-    activeTeam,
-    setActiveTeam,
+    userSide,
+    setUserSide,
     selectedHeroIds,
     handleSelectHero,
     handleRemoveHero,
@@ -51,8 +51,8 @@ export default function CounterPickPage() {
         <AppHeader
           currentPatch={currentPatch}
           teamAdvantage={teamAdvantage}
-          activeTeam={activeTeam}
-          setActiveTeam={setActiveTeam}
+          userSide={userSide}
+          setUserSide={setUserSide}
           clearDraft={clearDraft}
         />
 
@@ -90,7 +90,7 @@ export default function CounterPickPage() {
             <AnalysisEngine
               suggestions={suggestions}
               allHeroes={allHeroes}
-              onSelectHero={handleSelectHero}
+              onSelectHero={(hero) => handleSelectHero(hero, true)} // Suggestion click always picks for 'Us'
             />
           </div>
         </div>

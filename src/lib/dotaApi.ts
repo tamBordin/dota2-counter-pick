@@ -1,5 +1,6 @@
 import axios from 'axios';
 import heroesData from '@/data/heroes.json';
+import matchupsData from '@/data/matchups.json';
 import { Heroes } from '@/types/heros';
 
 const BASE_URL = 'https://api.opendota.com/api';
@@ -18,7 +19,15 @@ export const fetchHeroes = async (): Promise<HeroStats[]> => {
 };
 
 export const fetchHeroMatchups = async (heroId: number): Promise<Matchup[]> => {
+  // 1. Try to get from local cache first
+  const localData = (matchupsData as Record<string, Matchup[]>)[heroId.toString()];
+  if (localData) {
+    return localData;
+  }
+
+  // 2. Fallback to API if not found (e.g. new hero not in cache yet)
   try {
+    console.warn(`Cache miss for hero ${heroId}, fetching from API...`);
     const response = await axios.get(`${BASE_URL}/heroes/${heroId}/matchups`);
     return response.data;
   } catch (error) {

@@ -1,21 +1,21 @@
 "use client";
 
 import React from "react";
-import { Trash2 } from "lucide-react";
+import { Trash2, Shield, Sword } from "lucide-react";
 
 interface AppHeaderProps {
   currentPatch: string;
   teamAdvantage: number;
-  activeTeam: "radiant" | "dire";
-  setActiveTeam: (team: "radiant" | "dire") => void;
+  userSide: "radiant" | "dire";
+  setUserSide: (side: "radiant" | "dire") => void;
   clearDraft: () => void;
 }
 
 const AppHeader: React.FC<AppHeaderProps> = ({
   currentPatch,
   teamAdvantage,
-  activeTeam,
-  setActiveTeam,
+  userSide,
+  setUserSide,
   clearDraft,
 }) => {
   return (
@@ -57,18 +57,21 @@ const AppHeader: React.FC<AppHeaderProps> = ({
       </div>
 
       <div className="flex items-center gap-3">
-        <div className="flex bg-slate-900 p-1 rounded border border-slate-800 shadow-inner">
+        <div className="flex bg-slate-900 p-1 rounded border border-slate-800 shadow-inner items-center gap-2 px-3">
+          <span className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">
+            You are:
+          </span>
           <button
-            onClick={() => setActiveTeam("radiant")}
-            className={`px-4 py-1.5 rounded text-xs font-black transition-all uppercase tracking-widest ${activeTeam === "radiant" ? "bg-green-600 text-white shadow-lg shadow-green-900/20" : "text-slate-500 hover:text-slate-300"}`}
+            onClick={() => setUserSide("radiant")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-black transition-all uppercase tracking-widest ${userSide === "radiant" ? "bg-green-600 text-white shadow-lg shadow-green-900/20" : "text-slate-500 hover:text-slate-300"}`}
           >
-            Radiant
+            <Shield size={12} /> Radiant
           </button>
           <button
-            onClick={() => setActiveTeam("dire")}
-            className={`px-4 py-1.5 rounded text-xs font-black transition-all uppercase tracking-widest ${activeTeam === "dire" ? "bg-red-600 text-white shadow-lg shadow-red-900/20" : "text-slate-500 hover:text-slate-300"}`}
+            onClick={() => setUserSide("dire")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-black transition-all uppercase tracking-widest ${userSide === "dire" ? "bg-red-600 text-white shadow-lg shadow-red-900/20" : "text-slate-500 hover:text-slate-300"}`}
           >
-            Dire
+            <Sword size={12} /> Dire
           </button>
         </div>
         <button

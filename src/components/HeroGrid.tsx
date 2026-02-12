@@ -13,7 +13,7 @@ import React, { useState } from "react";
 
 interface HeroGridProps {
   heroes: HeroStats[];
-  onSelectHero: (hero: HeroStats, team: "radiant" | "dire") => void;
+  onSelectHero: (hero: HeroStats, isForUserTeam: boolean) => void;
   selectedHeroIds: number[];
 }
 
@@ -200,7 +200,7 @@ const HeroGrid: React.FC<HeroGridProps> = ({
 
                       <div className="absolute inset-0 flex opacity-0 group-hover:opacity-100 transition-all duration-300 z-10 translate-y-2 group-hover:translate-y-0">
                         <div
-                          onClick={() => onSelectHero(hero, "radiant")}
+                          onClick={() => onSelectHero(hero, true)}
                           className="w-1/2 h-full bg-green-600/80 backdrop-blur-[2px] flex flex-col items-center justify-center hover:bg-green-500 transition-colors border-r border-white/10"
                         >
                           <Plus
@@ -213,7 +213,7 @@ const HeroGrid: React.FC<HeroGridProps> = ({
                           </span>
                         </div>
                         <div
-                          onClick={() => onSelectHero(hero, "dire")}
+                          onClick={() => onSelectHero(hero, false)}
                           className="w-1/2 h-full bg-red-600/80 backdrop-blur-[2px] flex flex-col items-center justify-center hover:bg-red-500 transition-colors"
                         >
                           <Plus

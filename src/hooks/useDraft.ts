@@ -1,11 +1,11 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { getCategorizedSuggestions } from "@/lib/counterLogic";
 import {
   fetchHeroes,
   fetchHeroMatchups,
   HeroStats,
   Matchup,
 } from "@/lib/dotaApi";
-import { getCategorizedSuggestions } from "@/lib/counterLogic";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 export function useDraft() {
   const [allHeroes, setAllHeroes] = useState<HeroStats[]>([]);
@@ -20,7 +20,8 @@ export function useDraft() {
     {},
   );
   const [loading, setLoading] = useState(true);
-  const [activeTeam, setActiveTeam] = useState<"radiant" | "dire">("radiant");
+  const [userSide, setUserSide] = useState<"radiant" | "dire">("radiant");
+  const [activeTeam, setActiveTeam] = useState<"radiant" | "dire">("radiant"); // Used for URL persistence logic maybe, but for UI we now use userSide mostly? No, activeTeam is who we are picking for *right now*
 
   // Initial Data Fetch
   useEffect(() => {
@@ -41,6 +42,7 @@ export function useDraft() {
         const params = new URLSearchParams(window.location.search);
         const rIds = params.get("r")?.split(",").map(Number) || [];
         const dIds = params.get("d")?.split(",").map(Number) || [];
+        const side = params.get("side") as "radiant" | "dire" | null;
 
         const newRadiant = Array(5).fill(null);
         const newDire = Array(5).fill(null);
@@ -61,6 +63,7 @@ export function useDraft() {
 
         setRadiantTeam(newRadiant);
         setDireTeam(newDire);
+        if (side) setUserSide(side);
 
         // Pre-fetch matchups for loaded heroes
         const uniqueIds = Array.from(new Set([...rIds, ...dIds]));
@@ -97,8 +100,10 @@ export function useDraft() {
     if (dIds) url.searchParams.set("d", dIds);
     else url.searchParams.delete("d");
 
+    url.searchParams.set("side", userSide);
+
     window.history.replaceState({}, "", url.toString());
-  }, [radiantTeam, direTeam, loading]);
+  }, [radiantTeam, direTeam, userSide, loading]);
 
   const selectedHeroIds = useMemo(() => {
     return [
@@ -107,32 +112,47 @@ export function useDraft() {
     ];
   }, [radiantTeam, direTeam]);
 
+  // teamOverride: 'us' | 'enemy' (logical) instead of 'radiant' | 'dire' (absolute)
+  // But to keep it compatible with existing Grid UI that might send absolute, let's handle both or refactor Grid.
+  // Actually, Grid sends 'radiant' or 'dire' based on current "Active Team" in the old logic.
+  // NEW LOGIC: Grid will say "Pick for US" or "Pick for ENEMY".
+  // Let's change the signature to be logical.
   const handleSelectHero = useCallback(async (
     hero: HeroStats,
-    teamOverride?: "radiant" | "dire",
+    isForUserTeam: boolean, // true = pick for 'us', false = pick for 'enemy'
   ) => {
-    const targetTeam = teamOverride || activeTeam;
-    const currentTeam = targetTeam === "radiant" ? radiantTeam : direTeam;
+
+    // Determine target absolute team
+    let targetTeamKey: "radiant" | "dire";
+
+    if (isForUserTeam) {
+      targetTeamKey = userSide;
+    } else {
+      targetTeamKey = userSide === "radiant" ? "dire" : "radiant";
+    }
+
+    const currentTeam = targetTeamKey === "radiant" ? radiantTeam : direTeam;
     const emptySlotIndex = currentTeam.findIndex((h) => h === null);
 
     if (emptySlotIndex !== -1) {
       const newTeam = [...currentTeam];
       newTeam[emptySlotIndex] = hero;
 
-      if (targetTeam === "radiant") {
+      if (targetTeamKey === "radiant") {
         setRadiantTeam(newTeam);
-        setActiveTeam("dire");
       } else {
         setDireTeam(newTeam);
-        setActiveTeam("radiant");
       }
+
+      // We don't really need 'activeTeam' state toggle anymore for the UI interaction if we use split hover.
+      // But if we want to track "whose turn is it", we could. For now, let's keep it simple.
 
       if (!matchupsCache[hero.id]) {
         const matchups = await fetchHeroMatchups(hero.id);
         setMatchupsCache((prev) => ({ ...prev, [hero.id]: matchups }));
       }
     }
-  }, [activeTeam, radiantTeam, direTeam, matchupsCache]);
+  }, [userSide, radiantTeam, direTeam, matchupsCache]);
 
   const handleRemoveHero = useCallback((team: "radiant" | "dire", index: number) => {
     if (team === "radiant") {
@@ -154,12 +174,11 @@ export function useDraft() {
   }, []);
 
   const suggestions = useMemo(() => {
-    const enemies =
-      activeTeam === "radiant"
-        ? direTeam.filter((h): h is HeroStats => h !== null)
-        : radiantTeam.filter((h): h is HeroStats => h !== null);
+    // Enemy is the opposite of userSide
+    const enemyTeam = userSide === "radiant" ? direTeam : radiantTeam;
+    const myTeam = userSide === "radiant" ? radiantTeam : direTeam;
 
-    const myTeam = activeTeam === "radiant" ? radiantTeam : direTeam;
+    const enemies = enemyTeam.filter((h): h is HeroStats => h !== null);
 
     if (enemies.length === 0) return { cores: [], supports: [] };
 
@@ -169,7 +188,7 @@ export function useDraft() {
     radiantTeam,
     direTeam,
     matchupsCache,
-    activeTeam,
+    userSide,
   ]);
 
   const teamAdvantage = useMemo(() => {
@@ -188,13 +207,27 @@ export function useDraft() {
     return totalAdvantage / (radiantHeroes.length * direHeroes.length);
   }, [radiantTeam, direTeam, matchupsCache]);
 
+  const handleSetUserSide = useCallback((side: "radiant" | "dire") => {
+    if (side !== userSide) {
+      setUserSide(side);
+      // Swap teams so "My Team" stays consistent with the user, visually moving across the board
+      // actually, if I am Radiant, Radiant is "My Team". 
+      // If I switch to Dire, Dire becomes "My Team".
+      // If I want the heroes I picked to remain "My Team", they must move from Radiant -> Dire.
+      setRadiantTeam(direTeam);
+      setDireTeam(radiantTeam);
+    }
+  }, [userSide, radiantTeam, direTeam]);
+
   return {
     allHeroes,
     currentPatch,
     radiantTeam,
     direTeam,
     loading,
-    activeTeam,
+    userSide,
+    setUserSide: handleSetUserSide,
+    activeTeam, // Deprecated maybe? Keep for now if Header uses it visually
     setActiveTeam,
     selectedHeroIds,
     handleSelectHero,
