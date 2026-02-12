@@ -1,6 +1,7 @@
 "use client";
 
 import { heroAliases } from "@/data/aliases";
+import { analyzeRole } from "@/lib/counterLogic";
 import {
   HeroStats,
   getHeroImageUrl,
@@ -9,13 +10,19 @@ import {
   isTrending,
 } from "@/lib/dotaApi";
 import {
+  Activity,
   ChevronDown,
   Command,
   Filter,
   Flame,
   Plus,
   Search,
+  Shield,
+  ShieldPlus,
+  Swords,
   Trophy,
+  Wind,
+  Zap,
 } from "lucide-react";
 import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
@@ -33,6 +40,7 @@ const HeroGrid: React.FC<HeroGridProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedAttr, setSelectedAttr] = useState<string>("all");
+  const [selectedRole, setSelectedRole] = useState<string>("all");
   const [showAll, setShowAll] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -60,6 +68,16 @@ const HeroGrid: React.FC<HeroGridProps> = ({
     { key: "all_attr", label: "Universal", color: "text-purple-400" },
   ];
 
+  const roleFilters = [
+    { key: "all", label: "All Roles", icon: Filter },
+    { key: "Core", label: "Core", icon: Swords },
+    { key: "Support", label: "Support", icon: ShieldPlus },
+    { key: "Initiator", label: "Init", icon: Activity },
+    { key: "Durable", label: "Tank", icon: Shield },
+    { key: "Nuker", label: "Nuke", icon: Zap },
+    { key: "Escape", label: "Escape", icon: Wind },
+  ];
+
   // Filtering Logic
   const filteredHeroes = heroes.filter((hero) => {
     const searchLower = searchTerm.toLowerCase();
@@ -84,12 +102,26 @@ const HeroGrid: React.FC<HeroGridProps> = ({
         ? hero.primary_attr === "all"
         : hero.primary_attr === selectedAttr);
 
-    return matchesSearch && matchesAttr;
+    // 3. Role Check
+    let matchesRole = true;
+    if (selectedRole !== "all") {
+      if (selectedRole === "Core") {
+        const role = analyzeRole(hero);
+        matchesRole = role === "Core" || role === "Flex";
+      } else if (selectedRole === "Support") {
+        const role = analyzeRole(hero);
+        matchesRole = role === "Support" || role === "Flex";
+      } else {
+        matchesRole = hero.roles.includes(selectedRole);
+      }
+    }
+
+    return matchesSearch && matchesAttr && matchesRole;
   });
 
   // Display Logic: Show fewer heroes by default unless searching or filtering
   const isSearching = searchTerm.length > 0;
-  const isFiltering = selectedAttr !== "all";
+  const isFiltering = selectedAttr !== "all" || selectedRole !== "all";
 
   const displayHeroes =
     showAll || isSearching || isFiltering
@@ -120,31 +152,50 @@ const HeroGrid: React.FC<HeroGridProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 overflow-x-hidden pb-1 no-scrollbar">
-            {primaryAttrs.map((attr) => (
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 overflow-x-hidden pb-1 no-scrollbar">
+              {primaryAttrs.map((attr) => (
+                <button
+                  key={attr.key}
+                  onClick={() => setSelectedAttr(attr.key)}
+                  className={`whitespace-nowrap px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border ${
+                    selectedAttr === attr.key
+                      ? "bg-slate-800 border-slate-600 text-white shadow-lg scale-105"
+                      : "bg-transparent border-transparent text-slate-500 hover:bg-slate-800/50 hover:text-slate-300"
+                  }`}
+                >
+                  <span className={selectedAttr === attr.key ? attr.color : ""}>
+                    {attr.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {/* Toggle Show All (Only visible when not searching/filtering) */}
+            {!isSearching && !isFiltering && (
+              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-auto">
+                {showAll ? "All Heroes" : "Top Meta"}
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar border-t border-slate-800/50 pt-2">
+            {roleFilters.map((role) => (
               <button
-                key={attr.key}
-                onClick={() => setSelectedAttr(attr.key)}
-                className={`whitespace-nowrap px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border ${
-                  selectedAttr === attr.key
-                    ? "bg-slate-800 border-slate-600 text-white shadow-lg scale-105"
-                    : "bg-transparent border-transparent text-slate-500 hover:bg-slate-800/50 hover:text-slate-300"
+                key={role.key}
+                onClick={() => setSelectedRole(role.key)}
+                className={`flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider transition-all border ${
+                  selectedRole === role.key
+                    ? "bg-blue-600/20 border-blue-500/50 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.2)]"
+                    : "bg-transparent border-transparent text-slate-500 hover:text-slate-300 hover:bg-slate-800/50"
                 }`}
               >
-                <span className={selectedAttr === attr.key ? attr.color : ""}>
-                  {attr.label}
-                </span>
+                <role.icon size={12} />
+                {role.label}
               </button>
             ))}
           </div>
-
-          {/* Toggle Show All (Only visible when not searching/filtering) */}
-          {!isSearching && !isFiltering && (
-            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-auto">
-              {showAll ? "All Heroes" : "Top Meta"}
-            </div>
-          )}
         </div>
       </div>
 
