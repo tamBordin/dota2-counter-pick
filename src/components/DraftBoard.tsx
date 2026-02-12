@@ -30,8 +30,8 @@ const DraftBoard: React.FC<DraftBoardProps> = ({
             <div
               key={`radiant-${index}`}
               className={`relative group aspect-[16/9] rounded border-2 transition-all duration-300 overflow-hidden ${
-                hero 
-                  ? "border-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.1)] shadow-inner" 
+                hero
+                  ? "border-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.1)] shadow-inner"
                   : "border-slate-800 bg-slate-900/50"
               }`}
             >
@@ -75,8 +75,8 @@ const DraftBoard: React.FC<DraftBoardProps> = ({
             <div
               key={`dire-${index}`}
               className={`relative group aspect-[16/9] rounded border-2 transition-all duration-300 overflow-hidden ${
-                hero 
-                  ? "border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.1)] shadow-inner" 
+                hero
+                  ? "border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.1)] shadow-inner"
                   : "border-slate-800 bg-slate-900/50"
               }`}
             >
