@@ -180,7 +180,7 @@ export function useDraft() {
 
     const enemies = enemyTeam.filter((h): h is HeroStats => h !== null);
 
-    if (enemies.length === 0) return { cores: [], supports: [] };
+    if (enemies.length === 0) return { cores: [], supports: [], items: [] };
 
     return getCategorizedSuggestions(allHeroes, enemies, matchupsCache, myTeam);
   }, [

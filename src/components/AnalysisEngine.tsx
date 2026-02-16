@@ -5,9 +5,11 @@ import {
   HeroStats,
   getHeroImageUrl,
   getHeroWinRate,
+  getItemImageUrl,
   isProMeta,
   isTrending,
 } from "@/lib/dotaApi";
+import { CounterItem } from "@/data/items";
 import {
   AlertTriangle,
   Flame,
@@ -15,6 +17,7 @@ import {
   Target,
   TrendingUp,
   Trophy,
+  ShieldCheck,
 } from "lucide-react";
 import Image from "next/image";
 import React from "react";
@@ -23,6 +26,7 @@ interface AnalysisEngineProps {
   suggestions: {
     cores: CounterScore[];
     supports: CounterScore[];
+    items: CounterItem[];
   };
   allHeroes: HeroStats[];
   onSelectHero: (hero: HeroStats) => void;
@@ -147,6 +151,41 @@ const AnalysisEngine: React.FC<AnalysisEngineProps> = ({
       </h3>
       {suggestions.cores.length > 0 || suggestions.supports.length > 0 ? (
         <div className="space-y-6">
+          {/* Item Recommendations */}
+          {suggestions.items && suggestions.items.length > 0 && (
+            <div className="space-y-3 bg-blue-500/5 p-3 rounded-lg border border-blue-500/10">
+              <h4 className="text-[10px] font-black uppercase text-blue-400 tracking-widest flex items-center gap-1.5">
+                <ShieldCheck size={12} /> Essential Counter Items
+              </h4>
+              <div className="grid grid-cols-2 gap-2">
+                {suggestions.items.slice(0, 4).map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-2 bg-slate-800/50 p-1.5 rounded border border-white/5"
+                    title={item.reason}
+                  >
+                    <div className="relative w-8 h-6 overflow-hidden rounded border border-slate-700 shrink-0">
+                      <Image
+                        src={getItemImageUrl(item.id)}
+                        fill
+                        className="object-cover"
+                        alt={item.name}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[9px] font-bold text-slate-200 truncate leading-tight">
+                        {item.name}
+                      </div>
+                      <div className="text-[7px] text-slate-500 truncate uppercase font-bold tracking-tighter">
+                        {item.reason}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {suggestions.cores.length > 0 && (
             <div className="space-y-2">
               <h4 className="text-[10px] font-black uppercase text-slate-500 tracking-widest pl-1 mb-2">

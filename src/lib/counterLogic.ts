@@ -1,4 +1,5 @@
 import { HeroStats, Matchup, getHeroWinRate } from './dotaApi';
+import { COUNTER_ITEMS_MAP, HERO_ITEM_COUNTERS, CounterItem } from '@/data/items';
 
 export type CounterType = 'Meta' | 'Specialist' | 'Situational' | 'General';
 
@@ -13,6 +14,7 @@ export interface CounterScore {
 export interface CategorizedSuggestions {
   cores: CounterScore[];
   supports: CounterScore[];
+  items: CounterItem[];
 }
 
 export const analyzeRole = (hero: HeroStats): 'Core' | 'Support' | 'Flex' => {
@@ -105,6 +107,57 @@ export const calculateAdvantage = (
     .sort((a, b) => b.score - a.score);
 };
 
+export const calculateItemCounters = (enemyTeam: HeroStats[]): CounterItem[] => {
+  const neededCategories = new Set<string>();
+  const itemCounts: Record<string, { count: number; reasons: Set<string> }> = {};
+
+  enemyTeam.forEach(hero => {
+    const categories = HERO_ITEM_COUNTERS[hero.localized_name] || [];
+
+    // Add generic categories based on roles
+    if (hero.roles.includes('Nuker')) neededCategories.add('magic');
+    if (hero.roles.includes('Escape')) neededCategories.add('elusive');
+
+    categories.forEach(cat => {
+      const items = COUNTER_ITEMS_MAP[cat] || [];
+      items.forEach(itemEntry => {
+        itemEntry.items.forEach(itemId => {
+          if (!itemCounts[itemId]) {
+            itemCounts[itemId] = { count: 0, reasons: new Set() };
+          }
+          itemCounts[itemId].count += 1;
+          itemCounts[itemId].reasons.add(itemEntry.reason);
+        });
+      });
+    });
+  });
+
+  // Also add items from generic categories if not already added
+  neededCategories.forEach(cat => {
+    const items = COUNTER_ITEMS_MAP[cat] || [];
+    items.forEach(itemEntry => {
+      itemEntry.items.forEach(itemId => {
+        if (!itemCounts[itemId]) {
+          itemCounts[itemId] = { count: 0, reasons: new Set() };
+        }
+        itemCounts[itemId].count += 0.5; // Lower priority for generic role counters
+        itemCounts[itemId].reasons.add(itemEntry.reason);
+      });
+    });
+  });
+
+  return Object.entries(itemCounts)
+    .map(([id, data]) => ({
+      id,
+      name: id.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+      img: id,
+      reason: Array.from(data.reasons).slice(0, 2).join(', '),
+      priority: data.count
+    }))
+    .sort((a, b) => b.priority - a.priority)
+    .slice(0, 6);
+};
+
 export const getCategorizedSuggestions = (
   allHeroes: HeroStats[],
   enemyTeam: HeroStats[],
@@ -112,6 +165,7 @@ export const getCategorizedSuggestions = (
   myTeam: (HeroStats | null)[]
 ): CategorizedSuggestions => {
   const allSuggestions = calculateAdvantage(allHeroes, enemyTeam, matchupsData);
+  const itemSuggestions = calculateItemCounters(enemyTeam);
 
   // Filter out heroes already picked in myTeam or enemyTeam
   const pickedIds = new Set([
@@ -123,6 +177,7 @@ export const getCategorizedSuggestions = (
 
   return {
     cores: available.filter(s => s.role === 'Core' || s.role === 'Flex').slice(0, 10),
-    supports: available.filter(s => s.role === 'Support' || s.role === 'Flex').slice(0, 10)
+    supports: available.filter(s => s.role === 'Support' || s.role === 'Flex').slice(0, 10),
+    items: itemSuggestions
   };
 };

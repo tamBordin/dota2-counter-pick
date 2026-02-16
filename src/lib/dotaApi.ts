@@ -50,6 +50,15 @@ export const getHeroImageUrl = (img: string) => {
   return `https://cdn.cloudflare.steamstatic.com${img}`;
 };
 
+export const getItemImageUrl = (itemName: string) => {
+  // itemName should be without 'item_' prefix, e.g. 'black_king_bar'
+  const mapping: Record<string, string> = {
+    'scythe_of_vyse': 'sheepstick',
+  };
+  const name = mapping[itemName] || itemName;
+  return `https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/${name}.png`;
+};
+
 // --- Meta Analysis Helpers ---
 
 export const getHeroWinRate = (hero: HeroStats): number => {
