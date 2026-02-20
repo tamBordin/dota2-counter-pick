@@ -47,7 +47,9 @@ export const fetchCurrentPatch = async (): Promise<string> => {
 };
 
 export const getHeroImageUrl = (img: string) => {
-  return `https://cdn.cloudflare.steamstatic.com${img}`;
+  const withoutQuery = img.split('?')[0];
+  const filename = withoutQuery.split('/').pop() || withoutQuery;
+  return `/dota/heroes/${filename}`;
 };
 
 export const getItemImageUrl = (itemName: string) => {
@@ -56,7 +58,7 @@ export const getItemImageUrl = (itemName: string) => {
     'scythe_of_vyse': 'sheepstick',
   };
   const name = mapping[itemName] || itemName;
-  return `https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/${name}.png`;
+  return `/dota/items/${name}.png`;
 };
 
 // --- Meta Analysis Helpers ---
