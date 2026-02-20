@@ -5,6 +5,7 @@ import AppFooter from "@/components/AppFooter";
 import AppHeader from "@/components/AppHeader";
 import DraftBoard from "@/components/DraftBoard";
 import HeroGrid from "@/components/HeroGrid";
+import PositionMeta from "@/components/PositionMeta";
 import TeamAnalyzer from "@/components/TeamAnalyzer";
 import { useDraft } from "@/hooks/useDraft";
 import { Loader2 } from "lucide-react";
@@ -88,6 +89,8 @@ export default function CounterPickPage() {
             />
           </div>
         </div>
+
+        <PositionMeta heroes={allHeroes} />
 
         <AppFooter />
       </div>

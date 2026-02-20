@@ -181,3 +181,27 @@ export const getCategorizedSuggestions = (
     items: itemSuggestions
   };
 };
+
+export interface PositionHeroEntry {
+  hero: HeroStats;
+  winRate: number; // 0–100 percentage
+  picks: number;
+}
+
+export const getPositionTopHeroes = (
+  heroes: HeroStats[],
+  position: 1 | 2 | 3 | 4 | 5,
+  minPicks: number = 500,
+  topN: number = 10
+): PositionHeroEntry[] => {
+  return heroes
+    .map((hero) => {
+      const picks = hero[`${position}_pick` as keyof HeroStats] as number;
+      const wins = hero[`${position}_win` as keyof HeroStats] as number;
+      if (!picks || picks < minPicks) return null;
+      return { hero, winRate: (wins / picks) * 100, picks };
+    })
+    .filter((item): item is PositionHeroEntry => item !== null)
+    .sort((a, b) => b.winRate - a.winRate)
+    .slice(0, topN);
+};
