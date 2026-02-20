@@ -221,6 +221,7 @@ const HeroGrid: React.FC<HeroGridProps> = ({
                   src={getHeroImageUrl(hero.img)}
                   alt={hero.localized_name}
                   fill
+                  sizes="(max-width: 768px) 33vw, (max-width: 1280px) 20vw, 14vw"
                   className="object-cover transition-transform duration-500 group-hover:scale-110"
                 />
 
@@ -265,13 +266,19 @@ const HeroGrid: React.FC<HeroGridProps> = ({
 
                   <div className="flex flex-col gap-2 mt-auto">
                     <button
-                      onClick={() => onSelectHero(hero, true)}
+                      onClick={() => {
+                        onSelectHero(hero, true);
+                        setSearchTerm("");
+                      }}
                       className="flex items-center justify-center gap-1.5 py-1.5 rounded bg-green-600 hover:bg-green-500 text-white text-[10px] font-black uppercase tracking-wide transition-colors shadow-lg"
                     >
                       <Plus size={12} strokeWidth={3} /> Pick Us
                     </button>
                     <button
-                      onClick={() => onSelectHero(hero, false)}
+                      onClick={() => {
+                        onSelectHero(hero, false);
+                        setSearchTerm("");
+                      }}
                       className="flex items-center justify-center gap-1.5 py-1.5 rounded bg-red-600 hover:bg-red-500 text-white text-[10px] font-black uppercase tracking-wide transition-colors shadow-lg"
                     >
                       <Plus size={12} strokeWidth={3} /> Pick Em

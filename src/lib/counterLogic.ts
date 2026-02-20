@@ -194,7 +194,72 @@ export const getPositionTopHeroes = (
   minPicks: number = 500,
   topN: number = 10
 ): PositionHeroEntry[] => {
+  const strict = heroes
+    .map((hero) => {
+      const picks = hero[`${position}_pick` as keyof HeroStats] as number;
+      const wins = hero[`${position}_win` as keyof HeroStats] as number;
+      if (!picks || picks < minPicks) return null;
+
+      const totalLanePicks =
+        (hero['1_pick'] || 0) +
+        (hero['2_pick'] || 0) +
+        (hero['3_pick'] || 0) +
+        (hero['4_pick'] || 0) +
+        (hero['5_pick'] || 0);
+
+      const laneShare = totalLanePicks > 0 ? picks / totalLanePicks : 0;
+      const role = analyzeRole(hero);
+
+      // Logic เพิ่มเติมให้ position ดูสมเหตุสมผลขึ้น
+      if (position === 1) {
+        // Pos 1: hard carry จริงๆ
+        if (!(role === 'Core' && hero.roles.includes('Carry'))) return null;
+        if (laneShare < 0.25) return null;
+      } else if (position === 2) {
+        // Pos 2: mid core (ส่วนใหญ่เป็น core ที่มี damage สูง)
+        if (role === 'Support') return null;
+        if (laneShare < 0.2) return null;
+      } else if (position === 3) {
+        // Pos 3: offlane tank / initiator
+        const isFrontliner =
+          hero.roles.includes('Durable') || hero.roles.includes('Initiator');
+        if (role === 'Support' || !isFrontliner) return null;
+        if (laneShare < 0.2) return null;
+      } else if (position === 4) {
+        // Pos 4: playmaker support (มี Nuker/Disabler/Escape)
+        const isPlaymaker =
+          hero.roles.includes('Nuker') ||
+          hero.roles.includes('Disabler') ||
+          hero.roles.includes('Escape');
+        if (!hero.roles.includes('Support') || !isPlaymaker) return null;
+        if (laneShare < 0.15) return null;
+      } else if (position === 5) {
+        // Pos 5: hard support แท้ๆ ไม่อยากให้ carry หลุดมา
+        if (!hero.roles.includes('Support')) return null;
+        if (hero.roles.includes('Carry')) return null;
+        if (laneShare < 0.2) return null;
+      }
+
+      return { hero, winRate: (wins / picks) * 100, picks };
+    })
+    .filter((item): item is PositionHeroEntry => item !== null)
+    .sort((a, b) => b.winRate - a.winRate)
+    .slice(0, topN);
+
+  // ถ้า strict filter แล้วไม่เหลือเลย ให้ fallback เป็น logic เดิมๆ ที่ดูแค่ role คร่าวๆ
+  if (strict.length > 0) return strict;
+
   return heroes
+    .filter((hero) => {
+      const role = analyzeRole(hero);
+      if (position === 1 || position === 2 || position === 3) {
+        return role === 'Core' || role === 'Flex';
+      }
+      if (position === 4 || position === 5) {
+        return role === 'Support' || role === 'Flex';
+      }
+      return true;
+    })
     .map((hero) => {
       const picks = hero[`${position}_pick` as keyof HeroStats] as number;
       const wins = hero[`${position}_win` as keyof HeroStats] as number;
